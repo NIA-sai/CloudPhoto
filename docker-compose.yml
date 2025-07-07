@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  cp:
+    build: .
+    ports:
+      - "23322:23322"
+    depends_on:
+      - mysql
+      - redis
+#    environment:
+#      - CONFIG_PATH=/root/config/config.yaml
+#    volumes:
+#      - ./config:/root/config
+    networks:
+      - backend
+
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  backend:

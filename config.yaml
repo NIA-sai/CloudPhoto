@@ -1,0 +1,21 @@
+app:
+  name: "CloudPhoto"
+  host: "localhost"
+  port: 23322
+  mode: "debug"
+
+mysql:
+  host: "localhost"
+  port: 3306
+  user: "root"
+  password: "123456"
+  database: "cloudphoto"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+
+ai:
+

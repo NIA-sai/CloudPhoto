@@ -1,18 +1,12 @@
 package main
 
-import "CloudPhoto/cmd/server"
-import "github.com/gin-gonic/gin"
-
-func Start() {
-	gin.SetMode()
-}
-import "github.com/gin-gonic/gin"
-
-func Start() {
-	gin.SetMode()
-}
+import (
+	"CloudPhoto/cmd/daemon"
+	"CloudPhoto/cmd/server"
+)
 
 func main() {
-	server.Init()
 	server.Start()
+	go daemon.Daemon()
+	select {}
 }

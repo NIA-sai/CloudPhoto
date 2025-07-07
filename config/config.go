@@ -1,41 +1,39 @@
-//这样其实挺方便的？
-//面像对象不用struct怎么你了
-
 package config
 
-var (
-	mode  string
-	mysql mysqlConfig
-	ai    aiConfig
+import (
+	"CloudPhoto/internal/tool"
+	"github.com/spf13/viper"
 )
 
-//var config configuration
-//type configuration struct {
-//	Mysql mysqlConfig
-//	Ai    aiConfig
-//	Mode  string
-//}
+var c config
 
-type mysqlConfig struct {
+func init() {
+	viper.SetConfigFile("./config.yaml")
 }
-
-type aiConfig struct {
-}
-
-//func Get() configuration {
-//	return config
-//}
-
-func Mode() string {
-	return mode
-}
-func Mysql() mysqlConfig {
-	return mysql
-}
-
-func Ai() aiConfig {
-	return ai
-}
-
 func Read() {
+	tool.PanicIfErr(
+		viper.ReadInConfig(),
+		viper.Unmarshal(&c),
+	)
+}
+
+func Get() config {
+	return c
+}
+
+type config struct {
+	App struct {
+		Host string
+		Mode string
+		Port int
+	}
+
+	Mysql struct {
+	}
+
+	Redis struct {
+	}
+
+	Ai struct {
+	}
 }
