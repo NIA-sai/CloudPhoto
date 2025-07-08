@@ -2,6 +2,7 @@ package module
 
 import (
 	"CloudPhoto/internal/module/aitool"
+	"CloudPhoto/internal/module/captcha"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +20,7 @@ func registerModule(m ...Module) {
 
 func init() {
 	registerModule(
+		&captcha.Captcha{},
 		&aitool.AiTool{},
 	)
 }

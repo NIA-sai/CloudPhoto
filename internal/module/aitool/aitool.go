@@ -1,7 +1,7 @@
 package aitool
 
 import (
-	"CloudPhoto/internal/module/storage"
+	"CloudPhoto/internal/storage"
 	"CloudPhoto/internal/tool"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -11,6 +11,7 @@ import (
 )
 
 func ChangeFace(c *gin.Context) {
+
 	face, err := c.FormFile("face")
 	tool.HandleErr(err, func() {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing face image"})

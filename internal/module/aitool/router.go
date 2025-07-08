@@ -1,6 +1,9 @@
 package aitool
 
-import "github.com/gin-gonic/gin"
+import (
+	"CloudPhoto/internal/middleware"
+	"github.com/gin-gonic/gin"
+)
 
 type AiTool struct {
 }
@@ -12,6 +15,7 @@ func (*AiTool) Init() {
 }
 
 func (*AiTool) InitRouter(r *gin.RouterGroup) {
+	r.Use(middleware.CaptchaAuth())
 	r.POST("/changeFace", ChangeFace)
 	r.POST("/addFigure", AddFigure)
 }
