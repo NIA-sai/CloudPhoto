@@ -11,7 +11,7 @@ import (
 
 var commands = map[string]func(){
 	"stop":          server.Stop,
-	"exist":         server.Stop,
+	"exist":         func() { os.Exit(0) },
 	"reload-config": config.Read,
 }
 

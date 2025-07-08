@@ -1,7 +1,6 @@
 package captcha
 
 import (
-	"CloudPhoto/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,6 +14,5 @@ func (*Captcha) Init() {
 }
 
 func (*Captcha) InitRouter(r *gin.RouterGroup) {
-	r.Use(middleware.CaptchaAuth())
 	r.GET("/image", ImageCaptcha)
 }

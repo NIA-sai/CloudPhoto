@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+func X() {}
 func CaptchaAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		captchaId := c.GetHeader("captcha-id")
