@@ -17,5 +17,5 @@ func (*AiTool) Init() {
 func (*AiTool) InitRouter(r *gin.RouterGroup) {
 	r.Use(middleware.CaptchaAuth())
 	r.POST("/changeFace", ChangeFace)
-	r.POST("/addFigure", AddFigure)
+	r.POST("/addFigure", CutOutFigure)
 }

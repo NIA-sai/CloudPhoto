@@ -48,20 +48,12 @@ func ChangeFace(c *gin.Context) {
 	}
 }
 
-func AddFigure(c *gin.Context) {
+func CutOutFigure(c *gin.Context) {
 	files, err := c.MultipartForm()
 	tool.HandleErr(err, func() {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing files"})
 		return
 	})
-	backGround, ok := files.File["backGround"]
-	if !ok || len(backGround) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing backGround"})
-		return
-	} else if len(backGround) > 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "too many backGround"})
-		return
-	}
 	figures, ok := files.File["figures"]
 	if !ok || len(figures) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing figures"})
@@ -72,10 +64,6 @@ func AddFigure(c *gin.Context) {
 	doneCh := make(chan string)
 	errCh := make(chan error)
 	go func() {
-		backGroundFile, err := backGround[0].Open()
-		tool.HandleErr(err, func() { errCh <- err; return })
-		defer tool.PanicIfErr(backGroundFile.Close())
-		backGroundByte, err := io.ReadAll(backGroundFile)
 		figuresByte := make([]*[]byte, len(figures))
 		for i, figure := range figures {
 			figureFile, err := figure.Open()
@@ -83,8 +71,7 @@ func AddFigure(c *gin.Context) {
 			defer tool.PanicIfErr(figureFile.Close())
 			*figuresByte[i], err = io.ReadAll(figureFile)
 		}
-
-		callPhotosAiApi("addFiguresApi", doneCh, errCh, &backGroundByte, figuresByte...)
+		callPhotosAiApi("addFiguresApi", doneCh, errCh, figuresByte[0], figuresByte[1:]...)
 	}()
 	select {
 	case resultPath := <-doneCh:
