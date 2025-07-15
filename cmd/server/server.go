@@ -2,6 +2,7 @@ package server
 
 import (
 	"CloudPhoto/config"
+	"CloudPhoto/internal/database"
 	"CloudPhoto/internal/module"
 	"CloudPhoto/internal/tool"
 	"context"
@@ -14,6 +15,7 @@ import (
 
 func initialize() {
 	config.Read()
+	database.Init()
 }
 
 var r = gin.New()

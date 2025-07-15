@@ -1,7 +1,8 @@
 # Dockerfile
 
 # 1. 使用官方 Go 镜像作为构建环境
-FROM golang:1.24.4 AS builder
+
+FROM golang:1.22 AS builder
 ENV GOPROXY https://goproxy.cn,direct
 
 # 2. 设置工作目录

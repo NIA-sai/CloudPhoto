@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -133,7 +134,7 @@ func callPhotosAiApi(api string, photo *[]byte, photos ...*[]byte) (any, error) 
 				results := make([]string, 0, len(all))
 				for _, p := range all {
 					body.BinaryDataBase64[0] = base64.StdEncoding.EncodeToString(*p)
-					tool.SendHttpReq(getCutOutBaseReq(body),
+					if tool.SendHttpReq(getCutOutBaseReq(body),
 						func(resp *http.Response) {
 							if resp.StatusCode != 200 {
 								fmt.Println(resp.Body)
@@ -142,12 +143,15 @@ func callPhotosAiApi(api string, photo *[]byte, photos ...*[]byte) (any, error) 
 							tool.PanicIfErr(json.NewDecoder(resp.Body).Decode(&result))
 							results = append(results, result.Data.BinaryDataBase64[0])
 						},
-					)
+					) != 200 {
+						//存在部分错误，信息
+						//在里面处理？
+					}
 				}
 				return results, nil
 			}
 		default:
-			return nil, nil
+			return nil, errors.New("unknown api")
 		}
 	}(photo, photos...)
 }

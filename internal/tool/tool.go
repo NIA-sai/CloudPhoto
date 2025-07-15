@@ -10,13 +10,14 @@ import (
 
 var httpClient = &http.Client{}
 
-func SendHttpReq(req *http.Request, f func(*http.Response)) {
+func SendHttpReq(req *http.Request, f func(*http.Response)) int {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		panic(err)
 	}
 	defer resp.Body.Close()
 	f(resp)
+	return resp.StatusCode
 }
 
 func PanicIfErr(err ...error) {
