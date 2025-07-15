@@ -18,4 +18,13 @@ redis:
   db: 0
 
 ai:
-
+  cut-out:
+    url: "https://visual.volcengineapi.com"
+    region: "cn-north-1"
+    service: "cv"
+    method: "POST"
+    content-type: "application/json"
+    action: "CVProcess"
+    version: "2022-08-31"
+    access-id: "z"
+    secret-key: "z"

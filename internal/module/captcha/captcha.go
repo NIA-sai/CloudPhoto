@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-// ImageCaptcha base64:<img :src="'data:image/png;base64,' + captchaImage" />
-func ImageCaptcha(c *gin.Context) {
+// imageCaptcha base64:<img :src="'data:image/png;base64,' + captchaImage" />
+func imageCaptcha(c *gin.Context) {
 	driver := base64Captcha.NewDriverString(80, 200, 5, 3, 4,
 		"1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
 		nil, nil, []string{})

@@ -22,6 +22,7 @@ var srv *http.Server
 func Start() {
 	initialize()
 	for _, m := range module.Modules {
+		m.Init()
 		m.InitRouter(r.Group(m.GetName()))
 	}
 	srv = &http.Server{

@@ -14,5 +14,5 @@ func (*Captcha) Init() {
 }
 
 func (*Captcha) InitRouter(r *gin.RouterGroup) {
-	r.GET("/image", ImageCaptcha)
+	r.GET("/image", imageCaptcha)
 }

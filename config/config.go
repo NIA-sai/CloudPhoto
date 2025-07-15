@@ -35,5 +35,18 @@ type config struct {
 	}
 
 	Ai struct {
-	}
+		CutOut volcengineApi `mapstructure:"cut-out"`
+	} `mapstructure:"ai"`
+}
+
+type volcengineApi struct {
+	Url         string `mapstructure:"url"`
+	Region      string `mapstructure:"region"`
+	Service     string `mapstructure:"service"`
+	Method      string `mapstructure:"method"`
+	ContentType string `mapstructure:"content-type"`
+	Action      string `mapstructure:"action"`
+	Version     string `mapstructure:"version"`
+	AccessId    string `mapstructure:"access-id"`
+	SecretKey   string `mapstructure:"secret-key"`
 }
