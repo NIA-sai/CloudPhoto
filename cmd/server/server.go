@@ -6,6 +6,7 @@ import (
 	"CloudPhoto/internal/module"
 	"CloudPhoto/internal/tool"
 	"context"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -23,6 +24,12 @@ var srv *http.Server
 
 func Start() {
 	initialize()
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:    []string{"Origin", "Content-Type", "captcha-id", "captcha-code"},
+		MaxAge:          24 * time.Hour,
+	}))
 	for _, m := range module.Modules {
 		m.Init()
 		m.InitRouter(r.Group(m.GetName()))

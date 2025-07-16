@@ -88,11 +88,14 @@ func cutOutFigure(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "too many figures"})
 		return
 	}
-	taskId := uuid.New().String()
-	go func() {
-		figuresByte := make([]*[]byte, len(figures))
-		for i, figure := range figures {
-			figureFile, err := figure.Open()
+	taskIds := ""
+	//taskIdss := make([]string, len(figures))
+	for _, f := range figures {
+		taskId := uuid.New().String()
+		taskIds += taskId + ","
+		//taskIdss[i] = taskId
+		go func() {
+			figureFile, err := f.Open()
 			if err != nil {
 				print(err.Error())
 				return
@@ -101,28 +104,27 @@ func cutOutFigure(c *gin.Context) {
 			data, err := io.ReadAll(figureFile)
 			if err != nil {
 				print(err.Error())
-				continue
+				return
 			}
-			figuresByte[i] = &data
-		}
-		result, err := callPhotosAiApi(storage.CutOut, figuresByte[0], figuresByte[1:]...)
-		//可能不必
-		if err != nil {
-			print(err.Error())
-			storage.SetCutOutTask(taskId, model.TaskResult{
-				Status:  "failed",
-				Result:  result,
-				Message: "",
-			})
-			return
-		} else {
-			storage.SetCutOutTask(taskId, model.TaskResult{
-				Status: "complete",
-				Result: result,
-			})
-		}
-	}()
-	c.String(202, "%s", taskId)
+			result, err := callPhotosAiApi(storage.CutOut, &data)
+			//可能不必
+			if err != nil {
+				print(err.Error())
+				storage.SetCutOutTask(taskId, model.TaskResult{
+					Status: "failed",
+					Result: result,
+				})
+				return
+			} else {
+				storage.SetCutOutTask(taskId, model.TaskResult{
+					Status: "complete",
+					Result: result,
+				})
+			}
+		}()
+	}
+	c.String(202, "%s", taskIds)
+	//c.JSON(202, taskIdss)
 }
 
 func callPhotosAiApi(api string, photo *[]byte, photos ...*[]byte) (any, error) {

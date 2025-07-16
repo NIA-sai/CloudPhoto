@@ -9,6 +9,7 @@ import (
 func X() {}
 func CaptchaAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		print("captcha auth")
 		captchaId := c.GetHeader("captcha-id")
 		captchaCode := c.GetHeader("captcha-code")
 
@@ -19,10 +20,10 @@ func CaptchaAuth() gin.HandlerFunc {
 		//}
 		//storage.RemoveCaptcha(captchaId)
 		if (*storage.GetCaptcha()).Verify(captchaId, captchaCode, true) {
+			c.Next()
+		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 			c.Abort()
-			return
 		}
-		c.Next()
 	}
 }
