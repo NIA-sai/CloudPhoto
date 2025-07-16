@@ -106,15 +106,18 @@ func cutOutFigure(c *gin.Context) {
 			figuresByte[i] = &data
 		}
 		result, err := callPhotosAiApi(storage.CutOut, figuresByte[0], figuresByte[1:]...)
+		//可能不必
 		if err != nil {
 			print(err.Error())
 			storage.SetCutOutTask(taskId, model.TaskResult{
-				Status: "failed",
+				Status:  "failed",
+				Result:  result,
+				Message: "",
 			})
 			return
 		} else {
 			storage.SetCutOutTask(taskId, model.TaskResult{
-				Status: "success",
+				Status: "complete",
 				Result: result,
 			})
 		}
@@ -132,20 +135,27 @@ func callPhotosAiApi(api string, photo *[]byte, photos ...*[]byte) (any, error) 
 				all = append(all, photos...)
 				body := getCutOutReqBaseBody()
 				results := make([]string, 0, len(all))
+				var tmp int
+
 				for _, p := range all {
 					body.BinaryDataBase64[0] = base64.StdEncoding.EncodeToString(*p)
-					if tool.SendHttpReq(getCutOutBaseReq(body),
+					tmp = tool.SendHttpReq(getCutOutBaseReq(body),
 						func(resp *http.Response) {
 							if resp.StatusCode != 200 {
 								fmt.Println(resp.Body)
 								return
 							}
 							tool.PanicIfErr(json.NewDecoder(resp.Body).Decode(&result))
-							results = append(results, result.Data.BinaryDataBase64[0])
 						},
-					) != 200 {
+					)
+					if tmp != 200 {
 						//存在部分错误，信息
 						//在里面处理？
+						results = append(results, "failed")
+					} else {
+
+						results = append(results, result.Data.BinaryDataBase64[0])
+
 					}
 				}
 				return results, nil
