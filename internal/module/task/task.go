@@ -14,6 +14,10 @@ func taskAsk(c *gin.Context) {
 		//result, ok = storage.GetChangeFaceTask(taskId)
 	case storage.CutOut:
 		result = storage.GetCutOutTask(taskId)
+		if result == "" {
+			c.Status(404)
+			return
+		}
 	default:
 		c.Status(404)
 		return
