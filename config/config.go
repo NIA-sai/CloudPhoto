@@ -39,8 +39,20 @@ type config struct {
 	} `mapstructure:"redis"`
 
 	Ai struct {
-		CutOut volcengineApi `mapstructure:"cut-out"`
+		CutOut     volcengineApi   `mapstructure:"cut-out"`
+		FaceFusion tencentCloudApi `mapstructure:"face-fusion"`
 	} `mapstructure:"ai"`
+}
+
+type tencentCloudApi struct { //配置结构体
+	Url       string `mapstructure:"url"`        // API地址
+	SecretId  string `mapstructure:"secret-id"`  // 密钥ID
+	SecretKey string `mapstructure:"secret-key"` // 密钥Key
+	ProjectId string `mapstructure:"project-id"` // 活动ID（必填）
+	Action    string `mapstructure:"action"`     // 接口动作（必填，固定值）
+	Version   string `mapstructure:"version"`    // 接口版本（必填，固定值）
+	Region    string `mapstructure:"region"`     // 地域（必填）
+	//RspImgType string `mapstructure:"rsp-img-type"` // 返回图像格式（必填）
 }
 
 type volcengineApi struct {

@@ -33,3 +33,4 @@ go.work.sum
 
 config.yml
 config.json
+/config.yaml

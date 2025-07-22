@@ -17,8 +17,12 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
+
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	tcerr "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
+	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
+	facefusion "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/facefusion/v20220927"
 )
 
 var (
@@ -26,52 +30,52 @@ var (
 	rawCutOutUrl *url.URL
 )
 
-func changeFace(c *gin.Context) {
-
-	face, err := c.FormFile("face")
-	if err != nil {
-		print(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing face image"})
-		return
-	}
-	bodyId := c.Query("body_id")
-	if bodyId == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing base_id"})
-		return
-	}
-	taskId := uuid.New().String()
-	storage.SetChangeFaceTask(
-		taskId,
-		model.TaskResult{
-			Status: "processing",
-		})
-	go func() {
-		bodyFile, err := os.Open(storage.GetBodyFilePath(bodyId))
-		tool.PanicIfErr(err)
-		defer tool.PanicIfErr(bodyFile.Close())
-		bodyByte, err := io.ReadAll(bodyFile)
-		tool.PanicIfErr(err)
-		faceFile, err := face.Open()
-		tool.PanicIfErr(err)
-		defer tool.PanicIfErr(faceFile.Close())
-		faceByte, err := io.ReadAll(faceFile)
-		tool.PanicIfErr(err)
-		result, err := callPhotosAiApi(storage.ChangeFace, &bodyByte, &faceByte)
-		if err != nil {
-			print(err.Error())
-			storage.SetChangeFaceTask(taskId, model.TaskResult{
-				Status: "failed",
-			})
-			return
-		} else {
-			storage.SetChangeFaceTask(taskId, model.TaskResult{
-				Status: "success",
-				Result: result,
-			})
-		}
-	}()
-	c.String(202, "%s", taskId)
-}
+//func changeFace(c *gin.Context) {
+//
+//	face, err := c.FormFile("face")
+//	if err != nil {
+//		print(err.Error())
+//		c.JSON(http.StatusBadRequest, gin.H{"error": "missing face image"})
+//		return
+//	}
+//	bodyId := c.Query("body_id")
+//	if bodyId == "" {
+//		c.JSON(http.StatusBadRequest, gin.H{"error": "missing base_id"})
+//		return
+//	}
+//	taskId := uuid.New().String()
+//	storage.SetChangeFaceTask(
+//		taskId,
+//		model.TaskResult{
+//			Status: "processing",
+//		})
+//	go func() {
+//		bodyFile, err := os.Open(storage.GetBodyFilePath(bodyId))
+//		tool.PanicIfErr(err)
+//		defer tool.PanicIfErr(bodyFile.Close())
+//		bodyByte, err := io.ReadAll(bodyFile)
+//		tool.PanicIfErr(err)
+//		faceFile, err := face.Open()
+//		tool.PanicIfErr(err)
+//		defer tool.PanicIfErr(faceFile.Close())
+//		faceByte, err := io.ReadAll(faceFile)
+//		tool.PanicIfErr(err)
+//		result, err := callPhotosAiApi(storage.ChangeFace, &bodyByte, &faceByte)
+//		if err != nil {
+//			print(err.Error())
+//			storage.SetChangeFaceTask(taskId, model.TaskResult{
+//				Status: "failed",
+//			})
+//			return
+//		} else {
+//			storage.SetChangeFaceTask(taskId, model.TaskResult{
+//				Status: "success",
+//				Result: result,
+//			})
+//		}
+//	}()
+//	c.String(202, "%s", taskId)
+//}
 
 func cutOutFigure(c *gin.Context) {
 	files, err := c.MultipartForm()
@@ -253,4 +257,128 @@ func getCutOutBaseReq(data *cutOutReqBody) *http.Request {
 	req.Header.Set("Content-Type", "application/json")
 	fmt.Println(authorization)
 	return req
+}
+
+//人脸融合:
+
+// 定义融合请求结构体，用于向后端、向腾讯云发请求
+type FusionRequest struct {
+	ModelId    string      `json:"model_id"`     // 模板素材ID
+	RspImgType string      `json:"rsp_img_type"` // 返回图像格式(url/base64)
+	MergeInfos []MergeInfo `json:"merge_infos"`  // 融合信息数组
+}
+
+// 定义MergeInfo结构体
+type MergeInfo struct {
+	//选择url/base64一种提交就行
+	Image string `json:"image,omitempty"` // 输入图片base64 (可选)
+	Url   string `json:"url,omitempty"`   // 输入图片URL (可选)
+}
+
+// 定义响应结构体,用于返回前端
+type FusionResponse struct {
+	Success   bool   `json:"success"`
+	FusedURL  string `json:"fused_url,omitempty"`
+	Error     string `json:"error,omitempty"`
+	ErrorCode string `json:"error_code,omitempty"`
+}
+
+func fuseFace(c *gin.Context) { //前端调用这个函数，这里面调用callFaceFusionApi函数
+
+	// 声明请求结构体实例
+	var req FusionRequest
+
+	// 绑定JSON数据到结构体
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求格式: " + err.Error()})
+		return
+	}
+
+	// 验证必要参数
+	if req.ModelId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少必填参数: model_id"})
+		return
+	}
+
+	if req.RspImgType != "url" && req.RspImgType != "base64" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "rsp_img_type必须是'url'或'base64'"})
+		return
+	}
+
+	if len(req.MergeInfos) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "至少需要提供一个MergeInfo"})
+		return
+	}
+
+	// 调用人脸融合API
+	result, err := callFaceFusionApi(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, FusionResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	// 返回成功结果
+	c.JSON(http.StatusOK, FusionResponse{
+		Success:  true,
+		FusedURL: result,
+	})
+}
+
+// 腾讯云人脸融合API调用函数
+func callFaceFusionApi(req FusionRequest) (string, error) {
+	// 1获取配置
+	cfg := config.Get().Ai.FaceFusion
+
+	// 2创建凭证对象
+	credential := common.NewCredential(
+		cfg.SecretId,
+		cfg.SecretKey,
+	)
+
+	// 3创建客户端配置
+	cpf := profile.NewClientProfile()
+	cpf.HttpProfile.Endpoint = cfg.Url
+
+	// 4创建客户端
+	client, err := facefusion.NewClient(credential, cfg.Region, cpf)
+	if err != nil {
+		return "", fmt.Errorf("failed to create client: %v", err)
+	}
+
+	// 5创建请求对象
+	request := facefusion.NewFuseFaceRequest()
+
+	// 6设置请求参数
+	request.ProjectId = common.StringPtr(cfg.ProjectId)
+	request.ModelId = common.StringPtr(req.ModelId)       // 模板素材ID
+	request.RspImgType = common.StringPtr(req.RspImgType) // 返回图像格式(url或base64)
+
+	// 转换 MergeInfos 从 []MergeInfo 到 []*MergeInfo
+	mergeInfos := make([]*facefusion.MergeInfo, len(req.MergeInfos))
+	for i, info := range req.MergeInfos {
+		mergeInfos[i] = &facefusion.MergeInfo{
+			Image: common.StringPtr(info.Image),
+			Url:   common.StringPtr(info.Url),
+		}
+	}
+	request.MergeInfos = mergeInfos
+
+	// 7发送请求
+	response, err := client.FuseFace(request)
+	if err != nil {
+		if sdkErr, ok := err.(*tcerr.TencentCloudSDKError); ok {
+			return "", fmt.Errorf("API error: %s, %s", sdkErr.Code, sdkErr.Message)
+		}
+		return "", fmt.Errorf("failed to fuse face: %v", err)
+	}
+
+	// 8处理响应
+	if response.Response != nil && response.Response.FusedImage != nil {
+		return *response.Response.FusedImage, nil
+	}
+
+	return "", errors.New("no fused image in response")
 }
