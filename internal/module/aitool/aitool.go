@@ -256,7 +256,6 @@ func getCutOutBaseReq(data *cutOutReqBody) *http.Request {
 	req.Header.Set("X-Date", xDate)
 	req.Header.Set("Authorization", authorization)
 	req.Header.Set("Content-Type", "application/json")
-	fmt.Println(authorization)
 	return req
 }
 

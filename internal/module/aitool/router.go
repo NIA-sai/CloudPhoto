@@ -24,10 +24,10 @@ func (*AiTool) Init() {
 }
 
 func (*AiTool) InitRouter(r *gin.RouterGroup) {
+	if config.Get().App.Mode != "debug" {
+		r.Use(middleware.CaptchaAuth())
+	}
 	r.POST("/cutOutFigure", cutOutFigure)
 	r.POST("/fuseFace", fuseFace)
-	if config.Get().App.Mode == "debug" {
-		return
-	}
-	r.Use(middleware.CaptchaAuth())
+
 }

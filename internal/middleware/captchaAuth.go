@@ -6,7 +6,6 @@ import (
 	"net/http"
 )
 
-func X() {}
 func CaptchaAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		print("captcha auth")
@@ -22,7 +21,7 @@ func CaptchaAuth() gin.HandlerFunc {
 		if (*storage.GetCaptcha()).Verify(captchaId, captchaCode, true) {
 			c.Next()
 		} else {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.String(http.StatusUnauthorized, "unauthorized")
 			c.Abort()
 		}
 	}

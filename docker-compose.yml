@@ -3,9 +3,9 @@ version: '3.8'
 services:
   cloudphoto:
     container_name: cloudphoto
-    # image: cloudphoto
-    build:
-      context: .
+    image: niasai/cloudphoto
+    #    build:
+    #      context: .
     ports:
       - "23322:23322"
     depends_on:
