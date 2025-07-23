@@ -1,6 +1,7 @@
 package storage
 
 const (
-	ChangeFace = "changeFace"
-	CutOut     = "cutOut"
+	ChangeFace     = "changeFace"
+	CutOut         = "cutOut"
+	CutOutFilePath = "/image/cutout"
 )

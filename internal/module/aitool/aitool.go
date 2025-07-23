@@ -14,9 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io"
-	"math/rand/v2"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
@@ -157,10 +158,22 @@ func callPhotosAiApi(api string, photo *[]byte, photos ...*[]byte) (any, error) 
 					if tmp != 200 {
 						//存在部分错误，信息
 						//在里面处理？
-						results = append(results, "failed")
+						results = append(results, "cutOut failed")
 					} else {
+						data, err := base64.StdEncoding.DecodeString(result.Data.BinaryDataBase64[0])
+						if err != nil {
+							results = append(results, "cutOut failed")
+						} else {
+							tool.PanicIfErr(os.MkdirAll(config.Get().App.StaticRoot+storage.CutOutFilePath, os.ModePerm))
+							fileName := "cutOuted_" + result.RequestId + ".png"
+							fullPath := filepath.Join(config.Get().App.StaticRoot+storage.CutOutFilePath, fileName)
 
-						results = append(results, result.Data.BinaryDataBase64[0])
+							if err := os.WriteFile(fullPath, data, 0644); err != nil {
+								results = append(results, "cutOut failed")
+							} else {
+								results = append(results, config.Get().App.Domain+"/"+filepath.Join(config.Get().App.StaticRelativePath+storage.CutOutFilePath, fileName))
+							}
+						}
 
 					}
 				}
@@ -180,29 +193,16 @@ func getCutOutReqBaseBody() *cutOutReqBody {
 		RGB:              [3]int{-1, -1, -1},
 		BinaryDataBase64: make([]string, 1),
 		ReturnUrl:        true,
-		LogoInfo: cutOutLogoInfo{
-			AddLogo:         true,
-			Position:        rand.Int() % 4,
-			LogoTextContent: "山东大学学生在线",
-		},
 	}
 }
 
 type cutOutReqBody struct {
-	ReqKey           string         `json:"req_key"`
-	BinaryDataBase64 []string       `json:"binary_data_base64"`
-	ReturnUrl        bool           `json:"return_url"`
-	OnlyMask         int            `json:"only_mask"`
-	RGB              [3]int         `json:"rgb"`
-	RefineMask       int            `json:"refine_mask"`
-	LogoInfo         cutOutLogoInfo `json:"logo_info"`
-}
-type cutOutLogoInfo struct {
-	AddLogo         bool    `json:"add_logo"`
-	Position        int     `json:"position"`
-	Language        int     `json:"language"`
-	Opacity         float64 `json:"opacity"`
-	LogoTextContent string  `json:"logo_text_content"`
+	ReqKey           string   `json:"req_key"`
+	BinaryDataBase64 []string `json:"binary_data_base64"`
+	ReturnUrl        bool     `json:"return_url"`
+	OnlyMask         int      `json:"only_mask"`
+	RGB              [3]int   `json:"rgb"`
+	RefineMask       int      `json:"refine_mask"`
 }
 
 var result cutOutRespBody
@@ -213,6 +213,7 @@ type cutOutRespBody struct {
 		BinaryDataBase64 []string `json:"binary_data_base64"`
 		ImageUrls        []string `json:"image_urls"`
 	} `json:"data"`
+	RequestId string `json:"request_id"`
 }
 
 // 并非Base

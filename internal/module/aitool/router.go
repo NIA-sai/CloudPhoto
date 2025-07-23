@@ -2,6 +2,7 @@ package aitool
 
 import (
 	"CloudPhoto/config"
+	_ "CloudPhoto/internal/middleware"
 	"github.com/gin-gonic/gin"
 	"net/url"
 )
@@ -23,7 +24,6 @@ func (*AiTool) Init() {
 
 func (*AiTool) InitRouter(r *gin.RouterGroup) {
 	//r.Use(middleware.CaptchaAuth())
-	//r.POST("/changeFace", changeFace)
 	r.POST("/cutOutFigure", cutOutFigure)
 	r.POST("/fuseFace", fuseFace)
 }

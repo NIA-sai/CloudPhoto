@@ -1,0 +1,42 @@
+app:
+  domain: "http://localhost:23322"
+  name: "CloudPhoto"
+  host: "0.0.0.0"
+  port: 23322
+  mode: "debug"
+  static-relative-path: "static"
+  static-root: "./static"
+mysql:
+  host: "localhost"
+  port: 3306
+  user: "root"
+  password: "123456"
+  database: "cloudphoto"
+
+redis:
+  host: "redis"
+  port: 6379
+  password: ""
+  db: 0
+
+ai:
+  cut-out:
+    url: "https://visual.volcengineapi.com"
+    region: "cn-north-1"
+    service: "cv"
+    method: "POST"
+    content-type: "application/json"
+    action: "CVProcess"
+    version: "2022-08-31"
+    access-id: ""
+    secret-key: ""
+    # 对应 tencentCloudApi 结构体
+  face-fusion:
+    url: "facefusion.tencentcloudapi.com"
+    secret-id: "对线绝对压制" # 腾讯云 Secret ID
+    secret-key: "自信诠释手法" # 腾讯云 Secret Key
+    project-id: "冷静突破束缚"          # 活动ID
+    action: "黄昏冰冷心绪"
+    version: "沉沦回忆幻境"
+    region: "06天才双边"
+    rsp-img-type: "终将打破枷锁" # 这行没用，还是让前端自行选择返回格式吧。返回图片的格式，可以是 url 或 base64

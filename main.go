@@ -7,6 +7,6 @@ import (
 
 func main() {
 	server.Start()
-	go daemon.Daemon()
+	daemon.Daemon()
 	select {}
 }

@@ -3,7 +3,9 @@ version: '3.8'
 services:
   cloudphoto:
     container_name: cloudphoto
-    image: niasai/cloudphoto
+    # image: cloudphoto
+    build:
+      context: .
     ports:
       - "23322:23322"
     depends_on:
@@ -13,6 +15,7 @@ services:
     #      - CONFIG_PATH=/root/config/config.yaml
     volumes:
       - ./config.yaml:/root/config.yaml
+      - ./static:/root/static #与config.yaml中的配置保持一致 （root对应点）
     networks:
       - backend
 

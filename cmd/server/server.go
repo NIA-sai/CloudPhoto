@@ -1,12 +1,14 @@
 package server
 
 import (
+	"CloudPhoto/cmd/daemon/cleaner"
 	"CloudPhoto/config"
 	"CloudPhoto/internal/database"
+	"CloudPhoto/internal/middleware"
 	"CloudPhoto/internal/module"
+	"CloudPhoto/internal/storage"
 	"CloudPhoto/internal/tool"
 	"context"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -17,19 +19,23 @@ import (
 func initialize() {
 	config.Read()
 	database.Init()
+	var f = []string{
+		config.Get().App.StaticRoot + storage.CutOutFilePath,
+	}
+	cleaner.StartFileCleanupTask(f, 24*time.Hour)
 }
 
 var r = gin.New()
 var srv *http.Server
 
 func Start() {
+	//初始化基本模块
 	initialize()
-	r.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:    []string{"Origin", "Content-Type", "captcha-id", "captcha-code"},
-		MaxAge:          24 * time.Hour,
-	}))
+	//添加中间件
+	r.Use(
+		middleware.Cors,
+	)
+	r.Static(config.Get().App.StaticRelativePath, config.Get().App.StaticRoot)
 	for _, m := range module.Modules {
 		m.Init()
 		m.InitRouter(r.Group(m.GetName()))

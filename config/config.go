@@ -23,10 +23,13 @@ func Get() config {
 
 type config struct {
 	App struct {
-		Host string
-		Mode string
-		Port int
-	}
+		Domain             string `mapstructure:"domain"`
+		Host               string `mapstructure:"host"`
+		Mode               string `mapstructure:"mode"`
+		Port               int    `mapstructure:"port"`
+		StaticRelativePath string `mapstructure:"static-relative-path"`
+		StaticRoot         string `mapstructure:"static-root"`
+	} `mapstructure:"app"`
 
 	Mysql struct {
 	}
