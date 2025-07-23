@@ -27,8 +27,9 @@ import (
 )
 
 var (
-	cutOutUrl    string
-	rawCutOutUrl *url.URL
+	cutOutUrl        string
+	rawCutOutUrl     *url.URL
+	faceFusionClient *facefusion.Client // 人脸融合全局客户端
 )
 
 //func changeFace(c *gin.Context) {
@@ -327,31 +328,35 @@ func fuseFace(c *gin.Context) { //前端调用这个函数，这里面调用call
 	})
 }
 
+// 初始化人脸融合客户端
+func initFaceFusionClient() {
+	cfg := config.Get().Ai.FaceFusion
+
+	// 创建凭证对象
+	credential := common.NewCredential(cfg.SecretId, cfg.SecretKey)
+
+	// 创建客户端配置
+	cpf := profile.NewClientProfile()
+	cpf.HttpProfile.Endpoint = cfg.Url
+
+	// 创建客户端
+	client, err := facefusion.NewClient(credential, cfg.Region, cpf)
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialize face fusion client: %v", err))
+	}
+
+	faceFusionClient = client
+}
+
 // 腾讯云人脸融合API调用函数
 func callFaceFusionApi(req FusionRequest) (string, error) {
 	// 1获取配置
 	cfg := config.Get().Ai.FaceFusion
 
-	// 2创建凭证对象
-	credential := common.NewCredential(
-		cfg.SecretId,
-		cfg.SecretKey,
-	)
-
-	// 3创建客户端配置
-	cpf := profile.NewClientProfile()
-	cpf.HttpProfile.Endpoint = cfg.Url
-
-	// 4创建客户端
-	client, err := facefusion.NewClient(credential, cfg.Region, cpf)
-	if err != nil {
-		return "", fmt.Errorf("failed to create client: %v", err)
-	}
-
-	// 5创建请求对象
+	// 2创建请求对象
 	request := facefusion.NewFuseFaceRequest()
 
-	// 6设置请求参数
+	// 3设置请求参数
 	request.ProjectId = common.StringPtr(cfg.ProjectId)
 	request.ModelId = common.StringPtr(req.ModelId)       // 模板素材ID
 	request.RspImgType = common.StringPtr(req.RspImgType) // 返回图像格式(url或base64)
@@ -366,8 +371,8 @@ func callFaceFusionApi(req FusionRequest) (string, error) {
 	}
 	request.MergeInfos = mergeInfos
 
-	// 7发送请求
-	response, err := client.FuseFace(request)
+	// 4发送请求
+	response, err := faceFusionClient.FuseFace(request)
 	if err != nil {
 		if sdkErr, ok := err.(*tcerr.TencentCloudSDKError); ok {
 			return "", fmt.Errorf("API error: %s, %s", sdkErr.Code, sdkErr.Message)
@@ -375,10 +380,63 @@ func callFaceFusionApi(req FusionRequest) (string, error) {
 		return "", fmt.Errorf("failed to fuse face: %v", err)
 	}
 
-	// 8处理响应
+	// 5处理响应
 	if response.Response != nil && response.Response.FusedImage != nil {
 		return *response.Response.FusedImage, nil
 	}
 
 	return "", errors.New("no fused image in response")
+}
+
+// 获取人脸融合素材模板:
+
+// 定义请求结构体
+type GetModelListRequest struct {
+	Limit  int `json:"limit"`  // 单次返回的模板素材数量限制
+	Offset int `json:"offset"` // 偏移量
+}
+
+// 获取人脸融合素材模板列表
+func getModelList(c *gin.Context) {
+
+	// 声明请求结构体实例
+	var req = GetModelListRequest{}
+
+	// 绑定JSON数据到结构体
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求格式: " + err.Error()})
+		return
+	}
+
+	// 1获取配置
+	cfg := config.Get().Ai.FaceFusion
+
+	// 实例化一个请求对象,每个接口都会对应一个request对象
+	request := facefusion.NewDescribeMaterialListRequest()
+
+	request.ActivityId = common.StringPtr(cfg.ProjectId)
+	request.Limit = common.Int64Ptr(int64(req.Limit))   // 设置单次返回的模板素材数量限制
+	request.Offset = common.Int64Ptr(int64(req.Offset)) // 设置偏移量
+
+	// 返回的resp是一个DescribeMaterialListResponse的实例，与请求对象对应
+	response, err := faceFusionClient.DescribeMaterialList(request)
+	if err != nil {
+		if sdkErr, ok := err.(*tcerr.TencentCloudSDKError); ok {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "API错误: " + sdkErr.Code + ", " + sdkErr.Message, // 保持一致性
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "获取模板列表失败: " + err.Error(), // 保持一致性
+		})
+		return
+	}
+
+	// 返回素材模板列表
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    response.Response,
+	})
+
 }

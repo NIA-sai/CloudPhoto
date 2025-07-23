@@ -20,6 +20,7 @@ redis:
   db: 0
 
 ai:
+  # 对应 volcengineApi 结构体
   cut-out:
     url: "https://visual.volcengineapi.com"
     region: "cn-north-1"
@@ -30,6 +31,7 @@ ai:
     version: "2022-08-31"
     access-id: ""
     secret-key: ""
+
     # 对应 tencentCloudApi 结构体
   face-fusion:
     url: "facefusion.tencentcloudapi.com"

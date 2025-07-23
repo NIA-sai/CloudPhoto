@@ -21,6 +21,9 @@ func (*AiTool) Init() {
 	query.Add("Version", config.Get().Ai.CutOut.Version)
 	rawCutOutUrl.RawQuery = query.Encode()
 	cutOutUrl = rawCutOutUrl.String()
+
+	// 新增：初始化人脸融合客户端
+	initFaceFusionClient()
 }
 
 func (*AiTool) InitRouter(r *gin.RouterGroup) {
@@ -29,5 +32,5 @@ func (*AiTool) InitRouter(r *gin.RouterGroup) {
 	}
 	r.POST("/cutOutFigure", cutOutFigure)
 	r.POST("/fuseFace", fuseFace)
-
+	r.POST("/getModelList", getModelList)
 }
