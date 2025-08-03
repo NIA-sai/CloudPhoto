@@ -35,6 +35,15 @@ func Start() {
 	r.Use(
 		middleware.Cors,
 	)
+
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "running",
+			"message": "Welcome to CloudPhoto!",
+			"version": "1.0.0", // 可以添加版本信息
+		})
+	})
+
 	r.Static(config.Get().App.StaticRelativePath, config.Get().App.StaticRoot)
 	for _, m := range module.Modules {
 		m.Init()

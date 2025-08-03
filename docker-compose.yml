@@ -2,10 +2,8 @@ version: '3.8'
 
 services:
   cloudphoto:
+    build: .                    # 本地构建
     container_name: cloudphoto
-    image: niasai/cloudphoto
-    #    build:
-    #      context: .
     ports:
       - "23322:23322"
     depends_on:
@@ -37,15 +35,13 @@ services:
   redis:
     container_name: redis
     image: redis:7
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - backend
 
 volumes:
-  mysql_data:
+  #mysql_data:
   redis_data:
 
 networks:
