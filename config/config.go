@@ -29,6 +29,7 @@ type config struct {
 		Port               int    `mapstructure:"port"`
 		StaticRelativePath string `mapstructure:"static-relative-path"`
 		StaticRoot         string `mapstructure:"static-root"`
+		CaptchaUseTimes    int    `mapstructure:"captcha-use-times"`
 	} `mapstructure:"app"`
 
 	Mysql struct {

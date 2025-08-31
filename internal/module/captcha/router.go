@@ -11,6 +11,7 @@ func (*Captcha) GetName() string {
 	return "captcha"
 }
 func (*Captcha) Init() {
+
 }
 
 func (*Captcha) InitRouter(r *gin.RouterGroup) {

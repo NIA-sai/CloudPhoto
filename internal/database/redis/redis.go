@@ -25,10 +25,11 @@ func Get(ctx *context.Context, key string) string {
 	}
 	return val
 }
-func Set(ctx *context.Context, key string, value any, ttl time.Duration) {
-	tool.PanicIfErr(rdb.Set(*ctx, key, value, ttl).Err())
-}
 
 func Del(ctx *context.Context, key string) {
 	tool.PanicIfErr(rdb.Del(*ctx, key).Err())
+}
+
+func Set(ctx *context.Context, key string, value any, ttl time.Duration) {
+	tool.PanicIfErr(rdb.Set(*ctx, key, value, ttl).Err())
 }
